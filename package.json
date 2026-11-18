@@ -1,0 +1,37 @@
+{
+  "name": "pronto-intervento-roma",
+  "version": "0.10.0",
+  "private": true,
+  "description": "Sito statico di PRONTO INTERVENTO ROMA — HTML5, CSS3, JavaScript vanilla, generato con Node.js",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "node scripts/build.js",
+    "build:production": "SITE_ENV=production node scripts/build.js",
+    "preview": "node scripts/serve.js",
+    "dev": "node scripts/build.js && node scripts/serve.js",
+    "test": "node scripts/test.js",
+    "check": "node scripts/build.js && node scripts/test.js",
+    "test:browser": "python3 scripts/e2e/browser-check.py",
+    "test:all": "node scripts/test.js && python3 scripts/e2e/browser-check.py && python3 scripts/e2e/app-check.py && python3 scripts/e2e/ops-check.py && python3 scripts/e2e/ai-check.py && python3 scripts/e2e/seo-check.py && python3 scripts/e2e/launch-check.py && python3 scripts/e2e/activation-check.py",
+    "test:ops": "python3 scripts/e2e/ops-check.py",
+    "test:ai": "python3 scripts/e2e/ai-check.py",
+    "example:report": "node scripts/examples/report-example.mjs",
+    "test:unit": "node --test tests/unit/*.test.js",
+    "test:db": "bash scripts/db/test-db.sh",
+    "db:seed": "node scripts/db/generate-seed.js",
+    "seo:audit": "node scripts/seo/audit.js",
+    "seo:apply": "node scripts/seo/apply.js",
+    "test:seo": "python3 scripts/e2e/seo-check.py",
+    "test:launch": "python3 scripts/e2e/launch-check.py",
+    "db:backup": "bash scripts/db/backup.sh",
+    "db:restore": "bash scripts/db/restore.sh",
+    "test:activation": "python3 scripts/e2e/activation-check.py"
+  },
+  "license": "UNLICENSED",
+  "dependencies": {
+    "pdf-lib": "^1.17.1"
+  }
+}

@@ -1,0 +1,141 @@
+# Configurazione Netlify — PRONTO INTERVENTO ROMA
+# Prompt 8: pronta per due progetti Netlify distinti (vedi docs/NETLIFY_DEPLOYMENT.md):
+#  - STAGING  "pronto-intervento-roma-2" (*.netlify.app, mai indicizzabile, protetto da STAGING_BASIC_AUTH);
+#  - PRODUZIONE: il progetto Netlify che oggi serve prontointerventoroma.it (scenario A, docs/DOMAIN_MIGRATION.md).
+# Nessuno dei due è stato creato o modificato da questo repository.
+
+[build]
+  command = "npm run build"
+  publish = "dist"
+  edge_functions = "netlify/edge-functions"
+
+[build.environment]
+  NODE_VERSION = "22"
+
+# Funzioni server (checkout myPOS, notifiche di pagamento, PDF e verifica certificati,
+# coda notifiche, scadenze). Le chiavi (SUPABASE_SERVICE_ROLE_KEY, MYPOS_*) si impostano
+# SOLO nelle variabili d'ambiente di Netlify: vedi .env.example e docs/CONFIGURAZIONE-BACKEND.md
+[functions]
+  directory = "netlify/functions"
+  node_bundler = "esbuild"
+
+# Prompt 7 — PRONTO SEO: l'audit tecnico generato dalla build viene incluso nelle funzioni che lo leggono
+[functions.seo-monitor]
+  included_files = ["netlify/generated/seo-audit.json"]
+[functions.seo-admin]
+  included_files = ["netlify/generated/seo-audit.json"]
+[functions.setup-status]
+  included_files = ["netlify/generated/seo-audit.json"]
+
+# Indicizzazione (scripts/build.js): SOLO con SITE_ENV=production + ALLOW_INDEXING=true (variabile del solo
+# progetto di produzione) + URL di Netlify uguale al dominio ufficiale. Lo staging resta noindex in ogni caso.
+[context.production.environment]
+  SITE_ENV = "production"
+
+# Deploy preview e branch deploy: sempre noindex.
+[context.deploy-preview.environment]
+  SITE_ENV = "preview"
+
+[context.branch-deploy.environment]
+  SITE_ENV = "preview"
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    X-Frame-Options = "DENY"
+    Permissions-Policy = "camera=(), microphone=(), geolocation=(), payment=(), usb=()"
+    Strict-Transport-Security = "max-age=31536000"
+    Cross-Origin-Opener-Policy = "same-origin"
+    # Prompt 8 — CSP del sito pubblico. È la politica PIÙ AMPIA: le aree riservate aggiungono la propria,
+    # più restrittiva (il browser applica entrambe). Google Analytics è ammesso solo come origine:
+    # lo script viene caricato soltanto dopo il consenso (src/scripts/main.js).
+    Content-Security-Policy = "default-src 'self'; script-src 'self' https://www.googletagmanager.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://*.supabase.co https://*.google-analytics.com https://*.googletagmanager.com; connect-src 'self' https://*.supabase.co https://*.google-analytics.com https://*.analytics.google.com https://*.googletagmanager.com; font-src 'self'; form-action 'self' https://www.mypos.com https://mypos.com; frame-ancestors 'none'; base-uri 'self'; object-src 'none'; upgrade-insecure-requests"
+
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/*.html"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+
+# Aree riservate e pagine applicative: mai indicizzate, CSP restrittiva.
+[[headers]]
+  for = "/area-cliente/*"
+  [headers.values]
+    X-Robots-Tag = "noindex, nofollow"
+    Content-Security-Policy = "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://*.supabase.co; connect-src 'self' https://*.supabase.co; form-action 'self' https://www.mypos.com https://mypos.com; frame-ancestors 'none'; base-uri 'self'"
+
+[[headers]]
+  for = "/checkout/*"
+  [headers.values]
+    X-Robots-Tag = "noindex, nofollow"
+    Referrer-Policy = "no-referrer"
+    Cache-Control = "no-store"
+    Content-Security-Policy = "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' https://*.supabase.co; form-action 'self' https://www.mypos.com; frame-ancestors 'none'; base-uri 'self'"
+
+[[headers]]
+  for = "/paga/*"
+  [headers.values]
+    X-Robots-Tag = "noindex, nofollow"
+    Referrer-Policy = "no-referrer"
+    Cache-Control = "no-store"
+    Content-Security-Policy = "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' https://*.supabase.co; form-action 'self' https://www.mypos.com; frame-ancestors 'none'; base-uri 'self'"
+
+[[headers]]
+  for = "/pagamento/*"
+  [headers.values]
+    X-Robots-Tag = "noindex, nofollow"
+    Referrer-Policy = "no-referrer"
+    Cache-Control = "no-store"
+    Content-Security-Policy = "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' https://*.supabase.co; form-action 'self' https://www.mypos.com; frame-ancestors 'none'; base-uri 'self'"
+
+[[headers]]
+  for = "/area-business/*"
+  [headers.values]
+    X-Robots-Tag = "noindex, nofollow"
+    Content-Security-Policy = "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://*.supabase.co; connect-src 'self' https://*.supabase.co; form-action 'self' https://www.mypos.com https://mypos.com; frame-ancestors 'none'; base-uri 'self'"
+
+[[headers]]
+  for = "/admin/*"
+  [headers.values]
+    X-Robots-Tag = "noindex, nofollow"
+    Content-Security-Policy = "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://*.supabase.co; connect-src 'self' https://*.supabase.co; frame-ancestors 'none'; base-uri 'self'"
+
+[[headers]]
+  for = "/area-tecnico/*"
+  [headers.values]
+    X-Robots-Tag = "noindex, nofollow"
+    Content-Security-Policy = "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://*.supabase.co; connect-src 'self' https://*.supabase.co; frame-ancestors 'none'; base-uri 'self'"
+
+# Prompt 5: area tecnico mobile (nessun accesso alla posizione: geolocation disattivata anche qui)
+[[headers]]
+  for = "/tecnico/*"
+  [headers.values]
+    X-Robots-Tag = "noindex, nofollow"
+    Cache-Control = "no-store"
+    Content-Security-Policy = "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://*.supabase.co; connect-src 'self' https://*.supabase.co; frame-ancestors 'none'; base-uri 'self'"
+
+# Prompt 5: verifica pubblica dei rapporti (solo dati minimi)
+[[headers]]
+  for = "/rapporto/*"
+  [headers.values]
+    X-Robots-Tag = "noindex, nofollow"
+    Content-Security-Policy = "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'"
+
+[[headers]]
+  for = "/certificato/*"
+  [headers.values]
+    X-Robots-Tag = "noindex, nofollow"
+
+# Prompt 7 — PRONTO SEO: la dashboard /admin/seo/ ricade già in /admin/*; rinuncia alle recensioni mai indicizzata
+[[headers]]
+  for = "/recensioni/*"
+  [headers.values]
+    X-Robots-Tag = "noindex, nofollow"
+    Referrer-Policy = "no-referrer"
+
